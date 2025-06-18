@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    volumes:
+      # Mount these for development to avoid rebuilding the image for code changes
+      # Comment out in production
+      # - ./:/app
+      # - /app/node_modules
+      # - /app/.nuxt
+      - /app/.output
+    environment:
+      - NODE_ENV=production
+      # Add any other environment variables your application needs here
