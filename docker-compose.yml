@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "3100:3000"
     restart: unless-stopped
     volumes:
       # Mount these for development to avoid rebuilding the image for code changes
