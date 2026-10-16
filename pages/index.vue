@@ -1,56 +1,98 @@
 <template>
-  <div class="home-container">
-    <h1>Welcome to My Nuxt.js Application</h1>
-    <p>This is the home page of the application.</p>
-    <div class="links">
-      <NuxtLink to="/hello-world" class="link-button">Go to Hello World Page</NuxtLink>
+  <div class="space-y-6">
+    <AppHeader
+      :current-mode="currentMode"
+      @select-mode="selectMode"
+    />
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Left Column: Controls & Configuration -->
+      <div class="lg:col-span-6 space-y-6">
+        <PromptControls
+          :current-mode="currentMode"
+          :current-theme-list="currentThemeList"
+          :selected-theme="selectedTheme"
+          v-model:custom-scene="customScene"
+          :available-decor="availableDecor"
+          :selected-decor="selectedDecor"
+          :lighting-options="lightingOptions"
+          v-model:selected-lighting="selectedLighting"
+          :color-palettes="colorPalettes"
+          v-model:selected-palette="selectedPalette"
+          :quality-modifiers="qualityModifiers"
+          :selected-qualities="selectedQualities"
+          v-model:raw-custom-prompt="rawCustomPrompt"
+          v-model:display-name="displayName"
+          v-model:job-title="jobTitle"
+          @surprise-me="surpriseMe"
+          @apply-theme="applyTheme"
+          @toggle-decor="toggleDecor"
+          @toggle-quality="toggleQuality"
+        />
+      </div>
+
+      <!-- Right Column: Live Prompt & Video Preview -->
+      <div class="lg:col-span-6 space-y-6">
+        <PromptOutput
+          :generated-prompt="generatedPrompt"
+          :is-copied="isCopied"
+          :is-generating="isGenerating"
+          :usage="usage"
+          :limit-reached="limitReached"
+          @copy-prompt="copyPrompt"
+          @reset-defaults="resetToDefaults"
+          @generate-background="generateBackground"
+        />
+
+        <VideoCallPreview
+          v-model:background-blur="backgroundBlur"
+          :active-background-url="activeBackgroundUrl"
+          :display-name="displayName"
+          :job-title="jobTitle"
+          :is-generating="isGenerating"
+          :generation-progress="generationProgress"
+          @download="downloadBackground"
+        />
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
-// You can add script logic here if needed
+<script setup lang="ts">
+import { useBacksplashPrompt } from '~/composables/useBacksplashPrompt'
+
+const {
+  currentMode,
+  currentThemeList,
+  selectedTheme,
+  customScene,
+  availableDecor,
+  selectedDecor,
+  lightingOptions,
+  selectedLighting,
+  colorPalettes,
+  selectedPalette,
+  qualityModifiers,
+  selectedQualities,
+  rawCustomPrompt,
+  displayName,
+  jobTitle,
+  backgroundBlur,
+  isGenerating,
+  generationProgress,
+  isCopied,
+  activeBackgroundUrl,
+  generatedPrompt,
+  selectMode,
+  applyTheme,
+  toggleDecor,
+  toggleQuality,
+  generateBackground,
+  usage,
+  limitReached,
+  copyPrompt,
+  downloadBackground,
+  resetToDefaults,
+  surpriseMe
+} = useBacksplashPrompt()
 </script>
-
-<style scoped>
-.home-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 20px;
-}
-
-h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-p {
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.links {
-  margin-top: 20px;
-}
-
-.link-button {
-  display: inline-block;
-  background-color: #41b883; /* Vue.js green */
-  color: white;
-  padding: 12px 24px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.link-button:hover {
-  background-color: #34495e;
-  text-decoration: none;
-}
-</style>
