@@ -12,6 +12,20 @@
       </div>
     </div>
 
+    <div class="flex flex-wrap items-center justify-center gap-3">
+    <UButton
+      v-if="supportUrl"
+      :to="supportUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      size="sm"
+      color="warning"
+      variant="soft"
+      class="whitespace-nowrap"
+    >
+      ☕ Buy me a coffee
+    </UButton>
+
     <!-- Mode Toggle Tabs -->
     <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
       <button
@@ -48,10 +62,13 @@
         Custom
       </button>
     </div>
+    </div>
   </header>
 </template>
 
 <script setup lang="ts">
+const supportUrl = useRuntimeConfig().public.supportUrl
+
 import type { BacksplashMode } from '~/composables/useBacksplashPrompt'
 
 defineProps<{

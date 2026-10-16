@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   --bg-dark: #0f172a;
   --bg-card: #1e293b;
@@ -16,10 +20,6 @@
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {

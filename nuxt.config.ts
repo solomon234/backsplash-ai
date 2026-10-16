@@ -5,6 +5,22 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   devtools: { enabled: true },
+  colorMode: { preference: 'dark', fallback: 'dark', storageKey: 'backsplash-color-mode' },
+  runtimeConfig: {
+    cloudflareAccountId: '',
+    cloudflareApiToken: '',
+    // Max image generations per UTC day. Cloudflare's free tier is 10,000 Neurons/day; tune this to your per-image cost.
+    dailyGenerationLimit: 50,
+    public: {
+      // Buy Me a Coffee page; override with NUXT_PUBLIC_SUPPORT_URL. Leave empty to hide the support links.
+      supportUrl: 'https://buymeacoffee.com/solomonmurf'
+    }
+  },
+  nitro: {
+    storage: {
+      usage: { driver: 'fs', base: './.data/usage' }
+    }
+  },
   css: ['~/assets/css/main.css'],
   modules: ['@nuxt/ui', '@nuxt/eslint'],
   app: {

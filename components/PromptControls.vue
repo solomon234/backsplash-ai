@@ -23,6 +23,33 @@
       </div>
     </template>
 
+    <div class="space-y-6">
+    <!-- Name Tag -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Name Tag</label>
+        <span class="text-xs text-slate-500">Shown on the video preview</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <UInput
+          :model-value="displayName"
+          @update:model-value="$emit('update:displayName', $event)"
+          placeholder="Name (e.g. Jane Doe)"
+          icon="i-heroicons-user"
+          maxlength="40"
+          class="w-full"
+        />
+        <UInput
+          :model-value="jobTitle"
+          @update:model-value="$emit('update:jobTitle', $event)"
+          placeholder="Job title (e.g. Product Designer)"
+          icon="i-heroicons-briefcase"
+          maxlength="50"
+          class="w-full"
+        />
+      </div>
+    </div>
+
     <div v-if="currentMode === 'custom'" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">
@@ -184,6 +211,7 @@
         </div>
       </div>
     </div>
+    </div>
   </UCard>
 </template>
 
@@ -210,6 +238,8 @@ defineProps<{
   qualityModifiers: QualityModifier[]
   selectedQualities: string[]
   rawCustomPrompt: string
+  displayName: string
+  jobTitle: string
 }>()
 
 defineEmits<{
@@ -219,6 +249,8 @@ defineEmits<{
   (e: 'toggle-quality', qualId: string): void
   (e: 'update:customScene', value: string): void
   (e: 'update:rawCustomPrompt', value: string): void
+  (e: 'update:displayName', value: string): void
+  (e: 'update:jobTitle', value: string): void
   (e: 'update:selectedLighting', value: string): void
   (e: 'update:selectedPalette', value: string): void
 }>()

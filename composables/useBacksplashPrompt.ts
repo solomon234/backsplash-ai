@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 export type BacksplashMode = 'professional' | 'whimsical' | 'custom'
 
@@ -27,15 +27,6 @@ export interface PaletteItem {
 export interface QualityModifier {
   id: string
   label: string
-}
-
-export interface PresetBackground {
-  id: string
-  title: string
-  category: 'professional' | 'whimsical'
-  prompt: string
-  bgUrl: string
-  blurPx: number
 }
 
 export function useBacksplashPrompt() {
@@ -172,15 +163,23 @@ export function useBacksplashPrompt() {
     'no-people'
   ])
 
+  // Name tag shown on the video preview
+  const displayName = ref<string>('')
+  const jobTitle = ref<string>('')
+
   // Custom prompt input for custom mode
   const rawCustomPrompt = ref<string>('')
 
   // UI state
+  const toast = useToast()
+  const usage = ref<{ used: number, limit: number, remaining: number, resetsAt: string } | null>(null)
   const backgroundBlur = ref<number>(0)
   const isGenerating = ref<boolean>(false)
   const generationProgress = ref<number>(0)
   const isCopied = ref<boolean>(false)
   const activeBackgroundUrl = ref<string>('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop')
+
+  onMounted(refreshUsage)
 
   function selectMode(mode: BacksplashMode) {
     currentMode.value = mode
@@ -245,27 +244,150 @@ export function useBacksplashPrompt() {
     return `${modePrefix}${themeLabel}. ${sceneText}${decorText}${lightingText}${paletteText}${qualitiesText}`
   })
 
-  function generateBackground() {
-    if (isGenerating.value) return
+  async function refreshUsage() {
+    try {
+      usage.value = await $fetch('/api/usage')
+    } catch {
+      // The counter is informational; generation still enforces the cap server-side.
+    }
+  }
+
+  const limitReached = computed(() => usage.value !== null && usage.value.remaining <= 0)
+
+  async function generateBackground() {
+    if (isGenerating.value || limitReached.value) return
     isGenerating.value = true
     generationProgress.value = 0
 
+    // The model gives no progress events, so ease toward 90% until the response lands.
     const interval = setInterval(() => {
-      generationProgress.value += 20
-      if (generationProgress.value >= 100) {
-        clearInterval(interval)
-        isGenerating.value = false
-        const sampleBgImages = [
-          'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
-        ]
-        const randomIndex = Math.floor(Math.random() * sampleBgImages.length)
-        activeBackgroundUrl.value = sampleBgImages[randomIndex]
+      generationProgress.value = Math.min(90, generationProgress.value + 5)
+    }, 300)
+
+    try {
+      const { image, usage: latest } = await $fetch<{ image: string, usage: NonNullable<typeof usage.value> }>('/api/generate', {
+        method: 'POST',
+        body: { prompt: generatedPrompt.value }
+      })
+      activeBackgroundUrl.value = image
+      usage.value = latest
+      backgroundBlur.value = 0
+      generationProgress.value = 100
+    } catch (err) {
+      const message = (err as { statusMessage?: string, data?: { statusMessage?: string } })?.data?.statusMessage
+        ?? (err as { statusMessage?: string })?.statusMessage
+        ?? 'Image generation failed.'
+      toast.add({ title: 'Could not generate background', description: message, color: 'error' })
+    } finally {
+      clearInterval(interval)
+      isGenerating.value = false
+      // Re-sync after every attempt: a 429 or failure changes the server's count.
+      void refreshUsage()
+    }
+  }
+
+  // Mirrors the preview's name tag (bottom-left). Sizes scale with the image so it matches the preview at any resolution.
+  function drawNameTag(ctx: CanvasRenderingContext2D, width: number, height: number, name: string, title: string) {
+    const u = width / 545 // the preview frame is ~545px wide
+    const font = '"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif'
+    const nameSize = 14 * u
+    const titleSize = 12 * u
+    const padX = 12 * u
+    const padY = 6 * u
+    const bar = 4 * u
+    const margin = 12 * u
+    const maxTextWidth = width * 0.6 - padX * 2 - bar
+
+    const fit = (text: string) => {
+      if (ctx.measureText(text).width <= maxTextWidth) return text
+      let t = text
+      while (t.length > 1 && ctx.measureText(`${t}…`).width > maxTextWidth) t = t.slice(0, -1)
+      return `${t}…`
+    }
+
+    ctx.textBaseline = 'top'
+    const lines: { text: string, size: number, weight: number, color: string }[] = []
+    if (name) lines.push({ text: name, size: nameSize, weight: 600, color: '#ffffff' })
+    if (title) lines.push({ text: title, size: titleSize, weight: 400, color: '#cbd5e1' })
+    for (const l of lines) {
+      ctx.font = `${l.weight} ${l.size}px ${font}`
+      l.text = fit(l.text)
+    }
+
+    const lineGap = 2 * u
+    const textWidth = Math.max(...lines.map((l) => {
+      ctx.font = `${l.weight} ${l.size}px ${font}`
+      return ctx.measureText(l.text).width
+    }))
+    const boxW = bar + padX * 2 + textWidth
+    const boxH = padY * 2 + lines.reduce((sum, l) => sum + l.size * 1.3, 0) + lineGap * (lines.length - 1)
+    const x = margin
+    const y = height - margin - boxH
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'
+    ctx.beginPath()
+    ctx.roundRect(x, y, boxW, boxH, 6 * u)
+    ctx.fill()
+    ctx.save()
+    ctx.clip()
+    ctx.fillStyle = '#6366f1'
+    ctx.fillRect(x, y, bar, boxH)
+    ctx.restore()
+
+    let ty = y + padY
+    for (const l of lines) {
+      ctx.font = `${l.weight} ${l.size}px ${font}`
+      ctx.fillStyle = l.color
+      ctx.fillText(l.text, x + bar + padX, ty + l.size * 0.15)
+      ty += l.size * 1.3 + lineGap
+    }
+  }
+
+  // Saves the background cropped to 16:9 (what video-call apps expect), with the name tag if one is filled in.
+  // The silhouette and call HUD from the preview are never included.
+  async function downloadBackground() {
+    try {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.src = activeBackgroundUrl.value
+      await img.decode()
+
+      const targetRatio = 16 / 9
+      let sw = img.naturalWidth
+      let sh = img.naturalHeight
+      if (sw / sh > targetRatio) sw = Math.round(sh * targetRatio)
+      else sh = Math.round(sw / targetRatio)
+      const sx = Math.round((img.naturalWidth - sw) / 2)
+      const sy = Math.round((img.naturalHeight - sh) / 2)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = sw
+      canvas.height = sh
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh)
+
+      const name = displayName.value.trim()
+      const title = jobTitle.value.trim()
+      if (name || title) {
+        await document.fonts.load('600 16px "Plus Jakarta Sans"').catch(() => {})
+        drawNameTag(ctx, sw, sh, name, title)
       }
-    }, 200)
+
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95))
+      if (!blob) throw new Error('Could not encode image')
+
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'backsplash.jpg'
+      // Firefox/Safari only honour the click when the link is in the DOM, and revoking too early cancels the save.
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch {
+      toast.add({ title: 'Could not download background', description: 'The image could not be exported. Try generating a new one.', color: 'error' })
+    }
   }
 
   async function copyPrompt() {
@@ -301,54 +423,6 @@ export function useBacksplashPrompt() {
     selectedPalette.value = colorPalettes[Math.floor(Math.random() * colorPalettes.length)].id
   }
 
-  const presetGallery: PresetBackground[] = [
-    {
-      id: 'p1',
-      title: 'Executive Corner Suite',
-      category: 'professional',
-      prompt: 'A professional video call background image, Executive Suite. Spacious corner office with floor-to-ceiling glass windows overlooking a sunlit metropolis. Warm oak tones, Monstera plant.',
-      bgUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop',
-      blurPx: 0
-    },
-    {
-      id: 'p2',
-      title: 'Architectural Wood Loft',
-      category: 'professional',
-      prompt: 'Architectural loft workspace with acoustic wood slat wall, brass minimalist desk lamp, subtle monstera plant and soft window key light.',
-      bgUrl: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1600&auto=format&fit=crop',
-      blurPx: 2
-    },
-    {
-      id: 'p3',
-      title: 'Modern Curated Library',
-      category: 'professional',
-      prompt: 'Curated modern library shelf with warm lighting, leather-bound books, abstract geometric art, soft background blur.',
-      bgUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1600&auto=format&fit=crop',
-      blurPx: 0
-    },
-    {
-      id: 'w1',
-      title: 'Cyberpunk Neon Observatory',
-      category: 'whimsical',
-      prompt: 'Cyberpunk futuristic office observatory overlooking a glowing rainy metropolis with purple and cyan neon backlighting.',
-      bgUrl: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1600&auto=format&fit=crop',
-      blurPx: 0
-    },
-    {
-      id: 'w2',
-      title: 'Cosmic Nebula Cloud Lounge',
-      category: 'whimsical',
-      prompt: 'Dreamy cosmic cloud castle room floating above starry nebulas, glowing crystals and iridescent soft lighting.',
-      bgUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop',
-      blurPx: 1
-    }
-  ]
-
-  function applyPreset(preset: PresetBackground) {
-    activeBackgroundUrl.value = preset.bgUrl
-    backgroundBlur.value = preset.blurPx
-  }
-
   return {
     currentMode,
     professionalThemes,
@@ -365,21 +439,25 @@ export function useBacksplashPrompt() {
     qualityModifiers,
     selectedQualities,
     rawCustomPrompt,
+    displayName,
+    jobTitle,
     backgroundBlur,
     isGenerating,
     generationProgress,
     isCopied,
     activeBackgroundUrl,
-    presetGallery,
     generatedPrompt,
     selectMode,
     applyTheme,
     toggleDecor,
     toggleQuality,
     generateBackground,
+    usage,
+    limitReached,
+    refreshUsage,
     copyPrompt,
+    downloadBackground,
     resetToDefaults,
-    surpriseMe,
-    applyPreset
+    surpriseMe
   }
 }

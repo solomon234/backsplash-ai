@@ -22,6 +22,8 @@
           :quality-modifiers="qualityModifiers"
           :selected-qualities="selectedQualities"
           v-model:raw-custom-prompt="rawCustomPrompt"
+          v-model:display-name="displayName"
+          v-model:job-title="jobTitle"
           @surprise-me="surpriseMe"
           @apply-theme="applyTheme"
           @toggle-decor="toggleDecor"
@@ -35,6 +37,8 @@
           :generated-prompt="generatedPrompt"
           :is-copied="isCopied"
           :is-generating="isGenerating"
+          :usage="usage"
+          :limit-reached="limitReached"
           @copy-prompt="copyPrompt"
           @reset-defaults="resetToDefaults"
           @generate-background="generateBackground"
@@ -43,17 +47,14 @@
         <VideoCallPreview
           v-model:background-blur="backgroundBlur"
           :active-background-url="activeBackgroundUrl"
+          :display-name="displayName"
+          :job-title="jobTitle"
           :is-generating="isGenerating"
           :generation-progress="generationProgress"
+          @download="downloadBackground"
         />
       </div>
     </div>
-
-    <!-- Gallery Presets Footer -->
-    <PresetGallery
-      :preset-gallery="presetGallery"
-      @apply-preset="applyPreset"
-    />
   </div>
 </template>
 
@@ -74,21 +75,24 @@ const {
   qualityModifiers,
   selectedQualities,
   rawCustomPrompt,
+  displayName,
+  jobTitle,
   backgroundBlur,
   isGenerating,
   generationProgress,
   isCopied,
   activeBackgroundUrl,
-  presetGallery,
   generatedPrompt,
   selectMode,
   applyTheme,
   toggleDecor,
   toggleQuality,
   generateBackground,
+  usage,
+  limitReached,
   copyPrompt,
+  downloadBackground,
   resetToDefaults,
-  surpriseMe,
-  applyPreset
+  surpriseMe
 } = useBacksplashPrompt()
 </script>

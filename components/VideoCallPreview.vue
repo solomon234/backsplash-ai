@@ -1,13 +1,33 @@
 <template>
   <UCard class="bg-slate-900/60 border-slate-800">
     <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2 whitespace-nowrap">
           Video Call Live Preview
         </h2>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 [&_button]:whitespace-nowrap">
+          <UButton
+            size="xs"
+            color="neutral"
+            :variant="camera.status.value === 'on' ? 'solid' : 'outline'"
+            :icon="camera.status.value === 'on' ? 'i-heroicons-video-camera-slash' : 'i-heroicons-video-camera'"
+            :loading="camera.status.value === 'starting'"
+            @click="toggleCamera"
+          >
+            {{ camera.status.value === 'on' ? 'Stop camera' : camera.status.value === 'starting' ? 'Starting…' : 'Use camera' }}
+          </UButton>
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="outline"
+            icon="i-heroicons-arrow-down-tray"
+            :disabled="isGenerating"
+            @click="$emit('download')"
+          >
+            Download
+          </UButton>
           <div class="flex items-center gap-1.5">
-            <span class="text-xs text-slate-400">Background Blur:</span>
+            <span class="text-xs text-slate-400 whitespace-nowrap">Background Blur:</span>
             <input
               type="range"
               min="0"
@@ -43,8 +63,15 @@
         </div>
       </div>
 
-      <!-- User Silhouette Overlay (Simulated Web Cam Speaker) -->
-      <div class="absolute bottom-0 z-10 w-full flex justify-center pointer-events-none">
+      <!-- Live camera cutout (person only, mirrored like a self-view) -->
+      <canvas
+        ref="cameraCanvas"
+        class="absolute inset-0 z-10 w-full h-full object-cover -scale-x-100 pointer-events-none"
+        :class="camera.status.value === 'on' ? '' : 'hidden'"
+      />
+
+      <!-- User Silhouette Overlay (placeholder until the camera is on) -->
+      <div v-if="camera.status.value !== 'on'" class="absolute bottom-0 z-10 w-full flex justify-center pointer-events-none">
         <div class="relative w-64 h-56 flex flex-col items-center justify-end">
           <div class="w-28 h-28 rounded-full bg-slate-800/90 border-2 border-slate-600/60 shadow-xl flex items-center justify-center -mb-8 z-10 backdrop-blur-xs">
             <UIcon name="i-heroicons-user" class="w-16 h-16 text-slate-400/80" />
@@ -69,7 +96,15 @@
       </div>
 
       <!-- Video Call Controls Footer -->
-      <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+      <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 z-10">
+        <div
+          v-if="displayName.trim() || jobTitle.trim()"
+          class="max-w-[60%] bg-slate-900/85 backdrop-blur-md border-l-4 border-indigo-500 rounded-md px-3 py-1.5 shadow-lg"
+        >
+          <div v-if="displayName.trim()" class="text-sm font-semibold text-white truncate">{{ displayName }}</div>
+          <div v-if="jobTitle.trim()" class="text-xs text-slate-300 truncate">{{ jobTitle }}</div>
+        </div>
+        <div v-else />
         <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 flex items-center gap-2">
           <UIcon name="i-heroicons-video-camera" class="w-3.5 h-3.5 text-emerald-400" />
           <span>163 ms</span>
@@ -81,14 +116,32 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+
+const toast = useToast()
+const camera = useCameraCutout()
+const cameraCanvas = ref<HTMLCanvasElement | null>(null)
+
+function toggleCamera() {
+  if (camera.status.value === 'on') camera.stop()
+  else if (cameraCanvas.value) camera.start(cameraCanvas.value)
+}
+
+watch(camera.error, (message) => {
+  if (message) toast.add({ title: 'Camera unavailable', description: message, color: 'error' })
+})
+
 defineProps<{
   backgroundBlur: number
   activeBackgroundUrl: string
+  displayName: string
+  jobTitle: string
   isGenerating: boolean
   generationProgress: number
 }>()
 
 defineEmits<{
   (e: 'update:backgroundBlur', value: number): void
+  (e: 'download'): void
 }>()
 </script>
