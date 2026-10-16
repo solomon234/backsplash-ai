@@ -1,15 +1,6 @@
-const MODEL = '@cf/black-forest-labs/flux-1-schnell'
 const MAX_PROMPT_LENGTH = 2048
 
 export default defineEventHandler(async (event) => {
-  const { cloudflareAccountId, cloudflareApiToken } = useRuntimeConfig(event)
-  if (!cloudflareAccountId || !cloudflareApiToken) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Image generation is not configured. Set NUXT_CLOUDFLARE_ACCOUNT_ID and NUXT_CLOUDFLARE_API_TOKEN.'
-    })
-  }
-
   const body = await readBody<{ prompt?: unknown }>(event)
   const prompt = typeof body?.prompt === 'string' ? body.prompt.trim().slice(0, MAX_PROMPT_LENGTH) : ''
   if (!prompt) {
@@ -18,42 +9,24 @@ export default defineEventHandler(async (event) => {
 
   const reserved = await reserveGeneration(event)
   if (!reserved) {
-    const usage = await getUsage(event)
     throw createError({
       statusCode: 429,
       statusMessage: 'Daily generation limit reached. It resets at 00:00 UTC.',
-      data: usage
+      data: await getUsage(event)
     })
   }
 
-  let res: Response
   try {
-    res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${cloudflareAccountId}/ai/run/${MODEL}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${cloudflareApiToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prompt, steps: 8 })
-      }
-    )
-  } catch {
-    await releaseGeneration()
-    throw createError({ statusCode: 502, statusMessage: 'Could not reach Cloudflare. Try again.' })
-  }
+    const image = await generateImage(event, prompt)
+    return { image: `data:image/jpeg;base64,${image}`, usage: reserved }
+  } catch (err) {
+    if (!(err instanceof FluxError)) {
+      await releaseGeneration()
+      throw err
+    }
 
-  const json = await res.json().catch(() => null) as
-    | { image?: string, result?: { image?: string }, errors?: { message: string }[] }
-    | null
-
-  const image = json?.result?.image ?? json?.image
-  if (!res.ok || !image) {
-    const detail = json?.errors?.map(e => e.message).join('; ') || `HTTP ${res.status}`
-
-    // Cloudflare enforces its own free allowance; when it runs out, stop offering generations until reset.
-    if (res.status === 429 || /neuron|allocation|quota/i.test(detail)) {
+    // Cloudflare's own allowance ran out: stop offering generations until it resets.
+    if (err.kind === 'exhausted') {
       await markExhausted(event)
       throw createError({
         statusCode: 429,
@@ -63,8 +36,9 @@ export default defineEventHandler(async (event) => {
     }
 
     await releaseGeneration()
-    throw createError({ statusCode: 502, statusMessage: `Cloudflare image generation failed: ${detail}` })
+    throw createError({
+      statusCode: err.kind === 'misconfigured' ? 500 : 502,
+      statusMessage: err.kind === 'misconfigured' ? err.message : `Cloudflare image generation failed: ${err.message}`
+    })
   }
-
-  return { image: `data:image/jpeg;base64,${image}`, usage: reserved }
 })

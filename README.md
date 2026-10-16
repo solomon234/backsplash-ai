@@ -105,3 +105,14 @@ The Dockerfile uses a multi-stage build process:
 2. **Production Stage**: Uses Apache to serve the built application
    - Configures Apache to handle SPA routing
    - Copies the built application from the build stage
+
+## Deploying to Cloudflare Workers
+
+The image endpoint uses the Workers AI binding when deployed (no API token needed) and the daily generation counter lives in KV.
+
+1. `npx wrangler login`
+2. `npx wrangler kv namespace create USAGE`, then paste the printed `id` into `wrangler.jsonc`.
+3. Adjust `NUXT_DAILY_GENERATION_LIMIT` and `NUXT_PUBLIC_SUPPORT_URL` under `vars` in `wrangler.jsonc` if needed.
+4. `npm run deploy` (builds with the `cloudflare_module` preset, then `wrangler deploy`).
+
+Local development and plain `npm run build` stay on Node: the counter uses files in `.data/usage` and image generation uses the REST API with `NUXT_CLOUDFLARE_ACCOUNT_ID` / `NUXT_CLOUDFLARE_API_TOKEN` from `.env` (see `.env.example`).

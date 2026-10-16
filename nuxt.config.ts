@@ -1,4 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+// `npm run build:cloudflare` sets this; plain `npm run build` / dev stay on Node with file-based storage.
+const onWorkers = process.env.NITRO_PRESET === 'cloudflare_module'
+const fileUsageStorage = { driver: 'fs', base: './.data/usage' } as const
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   future: {
@@ -17,8 +22,16 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
+    // Daily generation counter. KV on Workers (binding `USAGE` in wrangler.jsonc), plain files everywhere else.
     storage: {
-      usage: { driver: 'fs', base: './.data/usage' }
+      usage: onWorkers ? { driver: 'cloudflare-kv-binding', binding: 'USAGE' } : fileUsageStorage
+    },
+    devStorage: {
+      usage: fileUsageStorage
+    },
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true
     }
   },
   css: ['~/assets/css/main.css'],
