@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "backsplash-ai",
-  "compatibility_date": "2025-07-15",
+  "compatibility_date": "2026-10-16",
   "compatibility_flags": ["nodejs_compat"],
 
   // Workers AI: the image endpoint calls env.AI.run(...), so no API token is needed once deployed.
