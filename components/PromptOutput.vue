@@ -1,11 +1,11 @@
 <template>
   <UCard class="bg-slate-900/60 border-slate-800">
     <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2 whitespace-nowrap">
           Assembled AI Prompt
         </h2>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 [&_button]:whitespace-nowrap">
           <UButton
             size="xs"
             color="neutral"

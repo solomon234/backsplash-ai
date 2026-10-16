@@ -1,10 +1,10 @@
 <template>
   <UCard class="bg-slate-900/60 border-slate-800">
     <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h2 class="text-base sm:text-lg font-semibold text-slate-100 flex flex-wrap items-center gap-x-2 gap-y-1">
           Backsplash Controls
-          <UBadge color="neutral" variant="subtle" size="sm">
+          <UBadge color="neutral" variant="subtle" size="sm" class="whitespace-nowrap">
             <span v-if="currentMode === 'professional'">💼 Professional Mode</span>
             <span v-else-if="currentMode === 'whimsical'">🎨 Whimsical Mode</span>
             <span v-else>⚙️ Custom Prompt Mode</span>
@@ -15,6 +15,7 @@
           size="xs"
           color="neutral"
           variant="outline"
+          class="shrink-0 whitespace-nowrap"
           icon="i-heroicons-sparkles"
           @click="$emit('surprise-me')"
         >
@@ -28,7 +29,7 @@
     <div>
       <div class="flex items-center justify-between mb-2">
         <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Name Tag</label>
-        <span class="text-xs text-slate-500">Shown on the video preview</span>
+        <span class="hidden sm:inline text-xs text-slate-500">Shown on the video preview</span>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <UInput
@@ -70,7 +71,7 @@
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Environment Theme</label>
-          <span class="text-xs text-slate-500">Select background setting</span>
+          <span class="hidden sm:inline text-xs text-slate-500">Select background setting</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
@@ -98,7 +99,7 @@
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Scene Description</label>
-          <span class="text-xs text-slate-500">Core room features & architecture</span>
+          <span class="hidden sm:inline text-xs text-slate-500">Core room features & architecture</span>
         </div>
         <UInput
           :model-value="customScene"
@@ -113,7 +114,7 @@
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Decor & Elements</label>
-          <span class="text-xs text-slate-500">Select key items in view</span>
+          <span class="hidden sm:inline text-xs text-slate-500">Select key items in view</span>
         </div>
         <div class="flex flex-wrap gap-1.5">
           <button
@@ -163,7 +164,7 @@
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Color Palette</label>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <button
             v-for="palette in colorPalettes"
             :key="palette.id"

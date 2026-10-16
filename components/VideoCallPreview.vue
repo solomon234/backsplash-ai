@@ -5,10 +5,11 @@
         <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2 whitespace-nowrap">
           Video Call Live Preview
         </h2>
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 [&_button]:whitespace-nowrap">
+        <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 sm:w-auto [&_button]:whitespace-nowrap">
           <UButton
             size="xs"
             color="neutral"
+            class="flex-1 justify-center sm:flex-none"
             :variant="camera.status.value === 'on' ? 'solid' : 'outline'"
             :icon="camera.status.value === 'on' ? 'i-heroicons-video-camera-slash' : 'i-heroicons-video-camera'"
             :loading="camera.status.value === 'starting'"
@@ -20,13 +21,14 @@
             size="xs"
             color="neutral"
             variant="outline"
+            class="flex-1 justify-center sm:flex-none"
             icon="i-heroicons-arrow-down-tray"
             :disabled="isGenerating"
             @click="$emit('download')"
           >
             Download
           </UButton>
-          <div class="flex items-center gap-1.5">
+          <div class="flex w-full items-center gap-1.5 sm:w-auto">
             <span class="text-xs text-slate-400 whitespace-nowrap">Background Blur:</span>
             <input
               type="range"
@@ -34,7 +36,7 @@
               max="12"
               :value="backgroundBlur"
               @input="$emit('update:backgroundBlur', Number(($event.target as HTMLInputElement).value))"
-              class="w-20 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              class="min-w-0 flex-1 sm:w-20 sm:flex-none accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
             />
             <span class="text-xs font-mono text-slate-300 w-6">{{ backgroundBlur }}px</span>
           </div>
@@ -52,12 +54,12 @@
       />
 
       <!-- Video Call HUD Overlay Header -->
-      <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-full px-3 py-1 text-xs text-slate-200 font-medium flex items-center gap-2 shadow-lg">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Meeting: Project Review (16:9 4K)</span>
+      <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
+        <div class="min-w-0 bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-full px-3 py-1 text-xs text-slate-200 font-medium flex items-center gap-2 shadow-lg">
+          <span class="w-2 h-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" />
+          <span class="truncate"><span class="hidden sm:inline">Meeting: </span>Project Review<span class="hidden sm:inline"> (16:9 4K)</span></span>
         </div>
-        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-full px-2.5 py-1 text-xs text-red-400 font-semibold flex items-center gap-1.5 shadow-lg">
+        <div class="shrink-0 whitespace-nowrap bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-full px-2.5 py-1 text-xs text-red-400 font-semibold flex items-center gap-1.5 shadow-lg">
           <span class="w-2 h-2 rounded-full bg-red-500 animate-ping" />
           • REC
         </div>
@@ -72,11 +74,11 @@
 
       <!-- User Silhouette Overlay (placeholder until the camera is on) -->
       <div v-if="camera.status.value !== 'on'" class="absolute bottom-0 z-10 w-full flex justify-center pointer-events-none">
-        <div class="relative w-64 h-56 flex flex-col items-center justify-end">
-          <div class="w-28 h-28 rounded-full bg-slate-800/90 border-2 border-slate-600/60 shadow-xl flex items-center justify-center -mb-8 z-10 backdrop-blur-xs">
-            <UIcon name="i-heroicons-user" class="w-16 h-16 text-slate-400/80" />
+        <div class="relative w-40 h-32 sm:w-64 sm:h-56 flex flex-col items-center justify-end">
+          <div class="w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-slate-800/90 border-2 border-slate-600/60 shadow-xl flex items-center justify-center -mb-5 sm:-mb-8 z-10 backdrop-blur-xs">
+            <UIcon name="i-heroicons-user" class="w-9 h-9 sm:w-16 sm:h-16 text-slate-400/80" />
           </div>
-          <div class="w-56 h-32 rounded-t-full bg-slate-800/90 border-t-2 border-x-2 border-slate-600/60 backdrop-blur-xs shadow-2xl" />
+          <div class="w-32 h-20 sm:w-56 sm:h-32 rounded-t-full bg-slate-800/90 border-t-2 border-x-2 border-slate-600/60 backdrop-blur-xs shadow-2xl" />
         </div>
       </div>
 

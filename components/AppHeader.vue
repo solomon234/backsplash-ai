@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-3">
+    <div class="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
     <UButton
       v-if="supportUrl"
       :to="supportUrl"
@@ -21,44 +21,44 @@
       size="sm"
       color="warning"
       variant="soft"
-      class="whitespace-nowrap"
+      class="justify-center whitespace-nowrap"
     >
       ☕ Buy me a coffee
     </UButton>
 
     <!-- Mode Toggle Tabs -->
-    <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+    <div class="flex w-full items-center bg-slate-950 p-1 rounded-lg border border-slate-800 sm:w-auto">
       <button
         type="button"
         @click="$emit('select-mode', 'professional')"
         :class="[
-          'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
+          'flex-1 justify-center whitespace-nowrap sm:flex-none px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
           currentMode === 'professional' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
         ]"
       >
-        <UIcon name="i-heroicons-briefcase" class="w-3.5 h-3.5" />
+        <UIcon name="i-heroicons-briefcase" class="w-3.5 h-3.5 max-[359px]:hidden" />
         Professional
       </button>
       <button
         type="button"
         @click="$emit('select-mode', 'whimsical')"
         :class="[
-          'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
+          'flex-1 justify-center whitespace-nowrap sm:flex-none px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
           currentMode === 'whimsical' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
         ]"
       >
-        <UIcon name="i-heroicons-paint-brush" class="w-3.5 h-3.5" />
+        <UIcon name="i-heroicons-paint-brush" class="w-3.5 h-3.5 max-[359px]:hidden" />
         Whimsical
       </button>
       <button
         type="button"
         @click="$emit('select-mode', 'custom')"
         :class="[
-          'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
+          'flex-1 justify-center whitespace-nowrap sm:flex-none px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5',
           currentMode === 'custom' ? 'bg-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
         ]"
       >
-        <UIcon name="i-heroicons-cog-6-tooth" class="w-3.5 h-3.5" />
+        <UIcon name="i-heroicons-cog-6-tooth" class="w-3.5 h-3.5 max-[359px]:hidden" />
         Custom
       </button>
     </div>
