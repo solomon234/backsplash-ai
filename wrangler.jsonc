@@ -14,7 +14,7 @@
   ],
 
   "vars": {
-    "NUXT_DAILY_GENERATION_LIMIT": "75",
+    "NUXT_DAILY_GENERATION_LIMIT": "50",
     "NUXT_PUBLIC_SUPPORT_URL": "https://buymeacoffee.com/solomonmurf"
   }
 }
