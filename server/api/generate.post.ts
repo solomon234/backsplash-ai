@@ -9,10 +9,12 @@ export default defineEventHandler(async (event) => {
 
   const reserved = await reserveGeneration(event)
   if (!reserved) {
+    const usage = await getUsage(event)
+    console.log(JSON.stringify({ message: 'daily generation limit reached', ...usage }))
     throw createError({
       statusCode: 429,
       statusMessage: 'Daily generation limit reached. It resets at 00:00 UTC.',
-      data: await getUsage(event)
+      data: usage
     })
   }
 
@@ -21,9 +23,13 @@ export default defineEventHandler(async (event) => {
     return { image: `data:image/jpeg;base64,${image}`, usage: reserved }
   } catch (err) {
     if (!(err instanceof FluxError)) {
+      console.error(JSON.stringify({ message: 'generation failed unexpectedly', error: err instanceof Error ? err.message : String(err) }))
       await releaseGeneration()
       throw err
     }
+
+    // Don't log the prompt: it's user-provided text and isn't needed to diagnose Cloudflare errors.
+    console.error(JSON.stringify({ message: 'image generation failed', kind: err.kind, detail: err.message }))
 
     // Cloudflare's own allowance ran out: stop offering generations until it resets.
     if (err.kind === 'exhausted') {

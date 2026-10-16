@@ -13,6 +13,13 @@
     { "binding": "USAGE", "id": "a2662f3e7f8c4f90ac1d0ebd2eba7f10" }
   ],
 
+  // Workers Logs (free plan: 200k events/day, 3-day retention) and sampled traces.
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+
   "vars": {
     "NUXT_DAILY_GENERATION_LIMIT": "50",
     "NUXT_PUBLIC_SUPPORT_URL": "https://buymeacoffee.com/solomonmurf"
