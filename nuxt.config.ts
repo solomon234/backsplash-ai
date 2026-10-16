@@ -5,6 +5,7 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   devtools: { enabled: true },
+  css: ['~/assets/css/main.css'],
   modules: ['@nuxt/ui', '@nuxt/eslint'],
   app: {
     head: {
