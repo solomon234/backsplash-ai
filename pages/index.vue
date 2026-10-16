@@ -4,43 +4,56 @@
     <header class="navbar">
       <div class="brand">
         <div class="logo-icon">
-          <UIcon name="i-heroicons-sparkles" class="icon-sparkle" />
+          <UIcon name="i-heroicons-sparkles" class="w-6 h-6 text-white" />
         </div>
         <div class="brand-text">
           <h1>Backsplash AI</h1>
-          <p class="tagline">Craft perfect AI backgrounds for video calls</p>
+          <p class="tagline">Craft perfect AI backgrounds for video calls with Nuxt UI</p>
         </div>
       </div>
 
-      <!-- Mode Selector -->
+      <!-- Mode Selector Tabs using UButton / UIcon -->
       <div class="mode-tabs">
-        <button
+        <UButton
           v-for="mode in modes"
           :key="mode.id"
+          :variant="currentMode === mode.id ? 'solid' : 'ghost'"
+          :color="currentMode === mode.id ? (mode.id === 'professional' ? 'primary' : mode.id === 'whimsical' ? 'pink' : 'purple') : 'neutral'"
+          size="sm"
           class="mode-btn"
-          :class="{ active: currentMode === mode.id }"
           @click="selectMode(mode.id)"
         >
           <span class="mode-emoji">{{ mode.emoji }}</span>
-          <span class="mode-label">{{ mode.label }}</span>
-        </button>
+          <span>{{ mode.label }}</span>
+        </UButton>
       </div>
     </header>
 
-    <!-- Main Container -->
+    <!-- Main Container Grid -->
     <main class="content-grid">
       <!-- Left Column: Input Form & Prompt Builder -->
-      <section class="builder-panel">
+      <UCard class="builder-panel">
         <div class="panel-header">
           <div class="header-title">
             <h2>Backsplash Controls</h2>
-            <span class="badge" :class="currentMode">
+            <UBadge
+              :color="currentMode === 'professional' ? 'info' : currentMode === 'whimsical' ? 'pink' : 'purple'"
+              variant="subtle"
+              size="md"
+            >
               {{ currentMode === 'professional' ? '💼 Professional' : currentMode === 'whimsical' ? '🎨 Whimsical' : '⚙️ Custom' }} Mode
-            </span>
+            </UBadge>
           </div>
-          <button class="random-btn" @click="randomizePrompt" title="Generate random combo">
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="xs"
+            icon="i-heroicons-sparkles"
+            @click="randomizePrompt"
+            title="Generate random combo"
+          >
             🎲 Surprise Me
-          </button>
+          </UButton>
         </div>
 
         <!-- 1. Category / Environment Preset -->
@@ -50,16 +63,18 @@
             <small>Select background setting</small>
           </label>
           <div class="pill-grid">
-            <button
+            <UButton
               v-for="cat in availableCategories"
               :key="cat.id"
-              class="pill-btn"
-              :class="{ selected: selectedCategory === cat.id }"
+              :variant="selectedCategory === cat.id ? 'soft' : 'outline'"
+              :color="selectedCategory === cat.id ? 'primary' : 'neutral'"
+              size="sm"
+              class="pill-btn justify-start"
               @click="selectedCategory = cat.id"
             >
               <span class="pill-icon">{{ cat.icon }}</span>
               <span>{{ cat.name }}</span>
-            </button>
+            </UButton>
           </div>
         </div>
 
@@ -69,34 +84,35 @@
             <span>Scene Description</span>
             <small>Core room features & architecture</small>
           </label>
-          <div class="input-wrapper">
-            <input
-              id="scene-input"
-              v-model="sceneDescription"
-              type="text"
-              class="text-input"
-              placeholder="e.g. Minimalist corner office with tall floor-to-ceiling windows"
-            />
-          </div>
+          <UInput
+            id="scene-input"
+            v-model="sceneDescription"
+            placeholder="e.g. Minimalist corner office with tall floor-to-ceiling windows"
+            icon="i-heroicons-pencil-square"
+            size="sm"
+            class="w-full"
+          />
         </div>
 
-        <!-- 3. Key Objects & Decor (Multi-select Pills) -->
+        <!-- 3. Key Objects & Decor (Multi-select) -->
         <div class="control-group">
           <label class="group-label">
             <span>Decor & Elements</span>
             <small>Select key items in view</small>
           </label>
           <div class="tags-grid">
-            <button
+            <UButton
               v-for="tag in availableDecorTags"
               :key="tag"
-              class="tag-btn"
-              :class="{ active: selectedDecor.includes(tag) }"
+              :variant="selectedDecor.includes(tag) ? 'soft' : 'subtle'"
+              :color="selectedDecor.includes(tag) ? 'primary' : 'neutral'"
+              size="xs"
+              class="rounded-full"
               @click="toggleDecor(tag)"
             >
-              <span class="check-icon" v-if="selectedDecor.includes(tag)">✓</span>
+              <UIcon v-if="selectedDecor.includes(tag)" name="i-heroicons-check" class="w-3.5 h-3.5 mr-1" />
               <span>{{ tag }}</span>
-            </button>
+            </UButton>
           </div>
         </div>
 
@@ -106,7 +122,7 @@
             <span>Lighting & Vibe</span>
           </label>
           <div class="option-row">
-            <button
+            <div
               v-for="light in lightingOptions"
               :key="light.id"
               class="option-card"
@@ -115,7 +131,7 @@
             >
               <span class="option-title">{{ light.name }}</span>
               <span class="option-desc">{{ light.desc }}</span>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -125,7 +141,7 @@
             <span>Color Palette</span>
           </label>
           <div class="color-swatch-grid">
-            <button
+            <div
               v-for="palette in colorPalettes"
               :key="palette.id"
               class="swatch-btn"
@@ -136,37 +152,49 @@
                 <span v-for="(color, idx) in palette.colors" :key="idx" :style="{ backgroundColor: color }"></span>
               </div>
               <span class="swatch-name">{{ palette.name }}</span>
-            </button>
+            </div>
           </div>
         </div>
 
-        <!-- 6. Quality & Depth Modifiers -->
+        <!-- 6. Quality Modifiers -->
         <div class="control-group">
           <label class="group-label">
             <span>Camera & Rendering Quality</span>
           </label>
           <div class="checkbox-row">
             <label v-for="mod in qualityModifiers" :key="mod.id" class="check-label">
-              <input type="checkbox" v-model="mod.enabled" />
+              <input type="checkbox" v-model="mod.enabled" class="accent-indigo-500" />
               <span>{{ mod.label }}</span>
             </label>
           </div>
         </div>
-      </section>
+      </UCard>
 
       <!-- Right Column: Live Prompt Output & Video Call Preview -->
       <section class="preview-panel">
         <!-- Assembled Prompt Box -->
-        <div class="card prompt-card">
+        <UCard class="prompt-card">
           <div class="card-header">
             <h3>Assembled AI Prompt</h3>
             <div class="prompt-actions">
-              <button class="btn-sm" @click="copyPrompt">
+              <UButton
+                size="xs"
+                color="primary"
+                variant="solid"
+                icon="i-heroicons-clipboard-document"
+                @click="copyPrompt"
+              >
                 {{ copied ? '✅ Copied!' : '📋 Copy Prompt' }}
-              </button>
-              <button class="btn-sm secondary" @click="resetForm">
+              </UButton>
+              <UButton
+                size="xs"
+                color="neutral"
+                variant="outline"
+                icon="i-heroicons-arrow-path"
+                @click="resetForm"
+              >
                 🔄 Reset
-              </button>
+              </UButton>
             </div>
           </div>
           <div class="prompt-box">
@@ -178,17 +206,21 @@
           </div>
 
           <!-- Generate Button -->
-          <button class="generate-btn" :disabled="isGenerating" @click="generateImage">
+          <UButton
+            block
+            size="lg"
+            color="primary"
+            class="generate-btn font-bold"
+            :loading="isGenerating"
+            @click="generateImage"
+          >
             <span v-if="!isGenerating">⚡ Generate Backsplash Preview</span>
-            <span v-else class="generating-state">
-              <span class="spinner"></span>
-              Rendering background with AI... {{ generationProgress }}%
-            </span>
-          </button>
-        </div>
+            <span v-else>Rendering background with AI... {{ generationProgress }}%</span>
+          </UButton>
+        </UCard>
 
         <!-- Video Call Frame Preview -->
-        <div class="card preview-card">
+        <UCard class="preview-card">
           <div class="card-header">
             <h3>Video Call Live Preview</h3>
             <div class="blur-controls">
@@ -199,7 +231,7 @@
                 min="0"
                 max="12"
                 v-model="blurAmount"
-                class="range-input"
+                class="range-input accent-indigo-500"
               />
               <span>{{ blurAmount }}px</span>
             </div>
@@ -256,22 +288,26 @@
           <!-- Download / Save Bar -->
           <div class="download-bar">
             <span class="active-preset-name">Current: {{ activePresetTitle }}</span>
-            <div class="download-actions">
-              <button class="btn-md" @click="downloadBackground">
-                ⬇️ Download Image
-              </button>
-            </div>
+            <UButton
+              color="neutral"
+              variant="solid"
+              size="sm"
+              icon="i-heroicons-arrow-down-tray"
+              @click="downloadBackground"
+            >
+              Download Image
+            </UButton>
           </div>
-        </div>
+        </UCard>
 
         <!-- Sample Backsplash Presets Gallery -->
-        <div class="card gallery-card">
+        <UCard class="gallery-card">
           <div class="card-header">
             <h3>Sample Backsplash Gallery</h3>
-            <small>Click to apply preset image</small>
+            <small class="text-slate-400">Click to apply preset image</small>
           </div>
           <div class="preset-grid">
-            <button
+            <div
               v-for="preset in samplePresets"
               :key="preset.id"
               class="preset-card"
@@ -279,19 +315,19 @@
               @click="selectPreset(preset)"
             >
               <div class="preset-thumb" :style="{ backgroundImage: `url(${preset.imageUrl})` }">
-                <span class="preset-tag">{{ preset.badge }}</span>
+                <UBadge size="xs" color="neutral" variant="solid" class="preset-tag">{{ preset.badge }}</UBadge>
               </div>
               <span class="preset-title">{{ preset.title }}</span>
-            </button>
+            </div>
           </div>
-        </div>
+        </UCard>
       </section>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 // Mode definition
 const modes = [
@@ -474,7 +510,6 @@ function randomizePrompt() {
   const randomPal = colorPalettes[Math.floor(Math.random() * colorPalettes.length)]
   selectedPalette.value = randomPal.id
 
-  // Pick 2 random decors
   const shuffled = [...availableDecorTags.value].sort(() => 0.5 - Math.random())
   selectedDecor.value = shuffled.slice(0, Math.min(3, shuffled.length))
 
@@ -556,11 +591,9 @@ function generateImage() {
       clearInterval(interval)
       isGenerating.value = false
 
-      // Update preview to a custom rendered image style
       activePresetId.value = 'generated-custom'
       activePresetTitle.value = `AI Generated: ${sceneDescription.value.slice(0, 30)}...`
 
-      // Select appropriate unspash curated image based on mode
       if (currentMode.value === 'whimsical') {
         activeBackgroundImage.value = 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80'
       } else {
@@ -615,8 +648,6 @@ function downloadBackground() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 24px;
 }
 
 .brand-text h1 {
@@ -636,35 +667,15 @@ function downloadBackground() {
 /* Mode Tabs */
 .mode-tabs {
   display: flex;
+  gap: 6px;
   background: #0f172a;
-  padding: 4px;
+  padding: 6px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
 }
 
-.mode-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mode-btn:hover {
-  color: var(--text-main);
-}
-
-.mode-btn.active {
-  background: var(--bg-card);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.mode-emoji {
+  margin-right: 4px;
 }
 
 /* Main Grid Layout */
@@ -682,10 +693,6 @@ function downloadBackground() {
 
 /* Builder Panel */
 .builder-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -710,54 +717,12 @@ function downloadBackground() {
   font-weight: 700;
 }
 
-.badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.badge.professional {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.badge.whimsical {
-  background: rgba(236, 72, 153, 0.2);
-  color: #f472b6;
-  border: 1px solid rgba(236, 72, 153, 0.3);
-}
-
-.badge.custom {
-  background: rgba(168, 85, 247, 0.2);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-.random-btn {
-  background: #334155;
-  color: #f8fafc;
-  border: 1px solid #475569;
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.random-btn:hover {
-  background: #475569;
-}
-
 /* Control Groups */
 .control-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .group-label {
@@ -782,53 +747,8 @@ function downloadBackground() {
   gap: 8px;
 }
 
-.pill-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: #0f172a;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
-
-.pill-btn:hover {
-  background: #1e293b;
-  color: white;
-}
-
-.pill-btn.selected {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%);
-  border-color: var(--primary);
-  color: white;
-  font-weight: 600;
-}
-
-/* Text Input */
-.input-wrapper {
-  position: relative;
-}
-
-.text-input {
-  width: 100%;
-  padding: 10px 14px;
-  background: #0f172a;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: white;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.text-input:focus {
-  border-color: var(--primary);
+.pill-icon {
+  margin-right: 6px;
 }
 
 /* Decor Tags */
@@ -836,37 +756,6 @@ function downloadBackground() {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.tag-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #0f172a;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tag-btn:hover {
-  color: white;
-  border-color: #475569;
-}
-
-.tag-btn.active {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: var(--primary);
-  color: white;
-}
-
-.check-icon {
-  color: var(--primary-light);
-  font-size: 0.85rem;
 }
 
 /* Option Cards for Lighting */
@@ -967,22 +856,11 @@ function downloadBackground() {
   cursor: pointer;
 }
 
-.check-label input {
-  accent-color: var(--primary);
-}
-
 /* Preview Panel */
 .preview-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 20px;
 }
 
 .card-header {
@@ -1032,73 +910,6 @@ function downloadBackground() {
   gap: 8px;
 }
 
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border-radius: 6px;
-  border: 1px solid var(--primary);
-  background: var(--primary);
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-sm.secondary {
-  background: transparent;
-  border-color: var(--border-color);
-  color: var(--text-muted);
-}
-
-.btn-sm.secondary:hover {
-  color: white;
-  border-color: #475569;
-}
-
-.generate-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-}
-
-.generate-btn:hover:not(:disabled) {
-  opacity: 0.95;
-  transform: translateY(-1px);
-}
-
-.generate-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.generating-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid white;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* Video Call Frame Mockup */
 .blur-controls {
   display: flex;
@@ -1110,7 +921,6 @@ function downloadBackground() {
 
 .range-input {
   width: 80px;
-  accent-color: var(--primary);
 }
 
 .video-call-frame {
@@ -1140,7 +950,6 @@ function downloadBackground() {
   pointer-events: none;
 }
 
-/* Presenter Silhouette */
 .avatar-silhouette {
   display: flex;
   flex-direction: column;
@@ -1285,6 +1094,10 @@ function downloadBackground() {
   animation: spin 0.8s linear infinite;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .progress-bar-container {
   width: 100%;
   height: 6px;
@@ -1313,22 +1126,6 @@ function downloadBackground() {
   font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 500;
-}
-
-.btn-md {
-  padding: 8px 16px;
-  background: #334155;
-  color: white;
-  border: 1px solid #475569;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-md:hover {
-  background: #475569;
 }
 
 /* Gallery Grid */
@@ -1378,11 +1175,6 @@ function downloadBackground() {
   position: absolute;
   top: 4px;
   left: 4px;
-  background: rgba(15, 23, 42, 0.8);
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: white;
 }
 
 .preset-title {

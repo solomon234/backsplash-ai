@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/icon": "^2.5.1",
+    "@nuxt/ui": "^4.12.0",
     "eslint": "^9.29.0",
     "nuxt": "^4.6.1",
     "typescript": "^5.8.3",
